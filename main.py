@@ -9,27 +9,26 @@ BOOK_DIR = 'books'
 IMAGE_DIR = 'images'
 
 
-def get_book_attributes(book_id):
-    url = f'https://tululu.org/b{book_id}/'
-    book_page_response = requests.get(url)
-    soup = BeautifulSoup(book_page_response.text, 'lxml')
-    book_attributes = soup.find('div', id="content").find('h1').text
-    book_title, book_author = book_attributes.split('::')
-    book_title = sanitize_filename(book_title.strip())
-    book_author = book_author.strip()
-    book_image = soup.find('div', class_="bookimage").find('img')
-    book_image_url = urljoin(book_page_response.url, book_image['src'])
+def parse_book_page(response):
+    data = {}
+    soup = BeautifulSoup(response.text, 'lxml')
+    attributes = soup.find('div', id="content").find('h1').text
+    title, author = attributes.split('::')
+    data['title'] = sanitize_filename(title.strip())
+    data['author'] = author.strip()
+    image = soup.find('div', class_="bookimage").find('img')
+    data['image_url'] = urljoin(response.url, image['src'])
     comments_block = soup.find_all('div', class_='texts')
-    book_comments = []
+    comments = []
     for comment in comments_block:
-        book_comments.append(comment.find('span', class_='black').text)
-    book_genres = []
+        comments.append(comment.find('span', class_='black').text)
+    data['comments'] = comments
+    genres = []
     genres_block = soup.find('span', class_="d_book").find_all('a')
     for genre in genres_block:
-        book_genres.append(genre.text)
-    print('Заголовок:', book_title)
-    print(book_genres, end='\n\n')
-    return book_title, book_author, book_image_url, book_comments
+        genres.append(genre.text)
+    data['genres'] = genres
+    return data
 
 
 def get_book(book_id):
@@ -37,12 +36,6 @@ def get_book(book_id):
     response = requests.get(url, allow_redirects=False)
     response.raise_for_status()
     return response
-
-
-def get_book_image(url):
-    response = requests.get(url)
-    response.raise_for_status()
-    return response.content
 
 
 def check_for_redirect(response):
@@ -57,11 +50,25 @@ if __name__ == '__main__':
         try:
             book = get_book(id_)
             check_for_redirect(book)
-            title, author, image_url, comments = get_book_attributes(id_)
-            image_name = os.path.basename(image_url)
         except requests.HTTPError:
             continue
-        with open(os.path.join(BOOK_DIR, f'{title} ({id_}).txt'), 'w') as file:
+        book_page_url = f'https://tululu.org/b{id_}/'
+        book_page_response = requests.get(book_page_url)
+        book_data = parse_book_page(book_page_response)
+        book_title = book_data['title']
+        book_author = book_data['author']
+        book_image_url = book_data['image_url']
+        book_comments = book_data['comments']
+        book_genres = book_data['genres']
+        book_image_name = os.path.basename(book_image_url)
+        with open(
+                os.path.join(
+                    BOOK_DIR,
+                    f'{book_title} ({id_}).txt'),
+                'w',
+        ) as file:
             file.write(book.text)
-        with open(os.path.join(IMAGE_DIR, f'{image_name}'), 'wb') as file:
-            file.write(get_book_image(image_url))
+        with open(os.path.join(IMAGE_DIR, f'{book_image_name}'), 'wb') as file:
+            book_image_response = requests.get(book_image_url)
+            book_image_response.raise_for_status()
+            file.write(book_image_response.content)
