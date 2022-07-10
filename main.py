@@ -19,7 +19,11 @@ def get_book_attributes(book_id):
     book_author = book_author.strip()
     book_image = soup.find('div', class_="bookimage").find('img')
     book_image_url = urljoin(book_page_response.url, book_image['src'])
-    return book_title, book_author, book_image_url
+    comments_block = soup.find_all('div', class_='texts')
+    book_comments = []
+    for comment in comments_block:
+        book_comments.append(comment.find('span', class_='black').text)
+    return book_title, book_author, book_image_url, book_comments
 
 
 def get_book(book_id):
@@ -47,7 +51,7 @@ if __name__ == '__main__':
         try:
             book = get_book(id_)
             check_for_redirect(book)
-            title, author, image_url = get_book_attributes(id_)
+            title, author, image_url, comments = get_book_attributes(id_)
             image_name = os.path.basename(image_url)
         except requests.HTTPError:
             continue
