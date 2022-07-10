@@ -1,3 +1,4 @@
+import argparse
 import os
 
 import requests
@@ -43,10 +44,32 @@ def check_for_redirect(response):
         raise requests.HTTPError
 
 
+def parse_arguments():
+    parser = argparse.ArgumentParser(
+        description='Парсер онлайн-библиотеки'
+    )
+    parser.add_argument(
+        '--start_id',
+        default=1,
+        type=int,
+        help='Начать скачивать с №...',
+    )
+    parser.add_argument(
+        '--end_id',
+        type=int,
+        help='Остановить скачивание на №...',
+    )
+    args = parser.parse_args()
+    start = args.start_id
+    end = args.end_id if args.end_id else args.start_id + 1
+    return start, end
+
+
 if __name__ == '__main__':
     os.makedirs(BOOK_DIR, exist_ok=True)
     os.makedirs(IMAGE_DIR, exist_ok=True)
-    for id_ in range(1, 11):
+    start_id, end_id = parse_arguments()
+    for id_ in range(start_id, end_id):
         try:
             book = get_book(id_)
             check_for_redirect(book)
