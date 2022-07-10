@@ -23,6 +23,12 @@ def get_book_attributes(book_id):
     book_comments = []
     for comment in comments_block:
         book_comments.append(comment.find('span', class_='black').text)
+    book_genres = []
+    genres_block = soup.find('span', class_="d_book").find_all('a')
+    for genre in genres_block:
+        book_genres.append(genre.text)
+    print('Заголовок:', book_title)
+    print(book_genres, end='\n\n')
     return book_title, book_author, book_image_url, book_comments
 
 
