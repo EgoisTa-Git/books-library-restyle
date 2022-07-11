@@ -70,13 +70,17 @@ if __name__ == '__main__':
     os.makedirs(IMAGE_DIR, exist_ok=True)
     start_id, end_id = parse_arguments()
     for id_ in range(start_id, end_id):
+        book = get_book(id_)
         try:
-            book = get_book(id_)
             check_for_redirect(book)
         except requests.HTTPError:
             continue
         book_page_url = f'https://tululu.org/b{id_}/'
         book_page_response = requests.get(book_page_url)
+        try:
+            check_for_redirect(book_page_response)
+        except requests.HTTPError:
+            continue
         book_page_response.raise_for_status()
         book_data = parse_book_page(book_page_response)
         book_title = book_data['title']
