@@ -11,22 +11,23 @@ IMAGE_DIR = 'images'
 
 
 def parse_book_page(response):
-    properties = {}
     soup = BeautifulSoup(response.text, 'lxml')
     attributes = soup.find('div', id="content").find('h1').text
     title, author = attributes.split('::')
-    properties['title'] = sanitize_filename(title.strip())
-    properties['author'] = author.strip()
     image = soup.find('div', class_="bookimage").find('img')
-    properties['image_url'] = urljoin(response.url, image['src'])
     comments_block = soup.find_all('div', class_='texts')
     comments = [
         comment.find('span', class_='black').text for comment in comments_block
     ]
-    properties['comments'] = comments
     genres_block = soup.find('span', class_="d_book").find_all('a')
     genres = [genre.text for genre in genres_block]
-    properties['genres'] = genres
+    properties = {
+        'title': sanitize_filename(title.strip()),
+        'author': author.strip(),
+        'image_url': urljoin(response.url, image['src']),
+        'comments': comments,
+        'genres': genres,
+    }
     return properties
 
 
