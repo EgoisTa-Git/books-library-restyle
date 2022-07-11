@@ -20,14 +20,12 @@ def parse_book_page(response):
     image = soup.find('div', class_="bookimage").find('img')
     properties['image_url'] = urljoin(response.url, image['src'])
     comments_block = soup.find_all('div', class_='texts')
-    comments = []
-    for comment in comments_block:
-        comments.append(comment.find('span', class_='black').text)
+    comments = [
+        comment.find('span', class_='black').text for comment in comments_block
+    ]
     properties['comments'] = comments
-    genres = []
     genres_block = soup.find('span', class_="d_book").find_all('a')
-    for genre in genres_block:
-        genres.append(genre.text)
+    genres = [genre.text for genre in genres_block]
     properties['genres'] = genres
     return properties
 
