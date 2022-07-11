@@ -32,13 +32,6 @@ def parse_book_page(response):
     return data
 
 
-def get_book(book_id):
-    url = f'https://tululu.org/txt.php?id={book_id}'
-    response = requests.get(url, allow_redirects=False)
-    response.raise_for_status()
-    return response
-
-
 def check_for_redirect(response):
     if 300 <= response.status_code < 400:
         raise requests.HTTPError
@@ -70,9 +63,11 @@ if __name__ == '__main__':
     os.makedirs(IMAGE_DIR, exist_ok=True)
     start_id, end_id = parse_arguments()
     for id_ in range(start_id, end_id):
-        book = get_book(id_)
+        book_url = f'https://tululu.org/txt.php?id={id_}'
+        book_response = requests.get(book_url, allow_redirects=False)
+        book_response.raise_for_status()
         try:
-            check_for_redirect(book)
+            check_for_redirect(book_response)
         except requests.HTTPError:
             continue
         book_page_url = f'https://tululu.org/b{id_}/'
@@ -95,7 +90,7 @@ if __name__ == '__main__':
                     f'{book_title} ({id_}).txt'),
                 'w',
         ) as file:
-            file.write(book.text)
+            file.write(book_response.text)
         with open(os.path.join(IMAGE_DIR, f'{book_image_name}'), 'wb') as file:
             book_image_response = requests.get(book_image_url)
             book_image_response.raise_for_status()
