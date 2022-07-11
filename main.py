@@ -61,8 +61,15 @@ if __name__ == '__main__':
     os.makedirs(IMAGE_DIR, exist_ok=True)
     start_id, end_id = parse_arguments()
     for id_ in range(start_id, end_id):
-        book_url = f'https://tululu.org/txt.php?id={id_}'
-        book_response = requests.get(book_url, allow_redirects=False)
+        payload = {
+            'id': id_
+        }
+        book_url = f'https://tululu.org/txt.php'
+        book_response = requests.get(
+            book_url,
+            params=payload,
+            allow_redirects=False,
+        )
         book_response.raise_for_status()
         try:
             check_for_redirect(book_response)
