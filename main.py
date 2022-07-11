@@ -87,7 +87,7 @@ if __name__ == '__main__':
         with open(
                 os.path.join(
                     BOOK_DIR,
-                    f'{book_title} ({id_}).txt'),
+                    f'{book_title} {id_}.txt'),
                 'w',
         ) as file:
             file.write(book_response.text)
