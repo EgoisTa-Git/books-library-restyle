@@ -67,12 +67,15 @@ if __name__ == '__main__':
         try:
             check_for_redirect(book_response)
         except requests.HTTPError:
+            print(f'There isn`t book with ID {id_}. Redirect detected!')
             continue
         book_page_url = f'https://tululu.org/b{id_}/'
         book_page_response = requests.get(book_page_url)
         try:
             check_for_redirect(book_page_response)
         except requests.HTTPError:
+            print(f'There isn`t page for book with ID {id_}. Redirect '
+                  f'detected!')
             continue
         book_page_response.raise_for_status()
         book_properties = parse_book_page(book_page_response)
