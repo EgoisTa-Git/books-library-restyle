@@ -77,6 +77,7 @@ if __name__ == '__main__':
             continue
         book_page_url = f'https://tululu.org/b{id_}/'
         book_page_response = requests.get(book_page_url)
+        book_page_response.raise_for_status()
         book_data = parse_book_page(book_page_response)
         book_title = book_data['title']
         book_author = book_data['author']
