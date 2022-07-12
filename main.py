@@ -33,7 +33,7 @@ def parse_book_page(response):
 
 def check_for_redirect(response):
     if 300 <= response.status_code < 400:
-        raise requests.HTTPError
+        raise requests.TooManyRedirects
 
 
 def download_book(response, directory, title, book_id):
@@ -86,21 +86,29 @@ if __name__ == '__main__':
             params=payload,
             allow_redirects=False,
         )
-        book_response.raise_for_status()
+        try:
+            book_response.raise_for_status()
+        except requests.HTTPError:
+            print('Errors on the client or server side')
+            continue
         try:
             check_for_redirect(book_response)
-        except requests.HTTPError:
+        except requests.TooManyRedirects:
             print(f'There isn`t book with ID {id_}. Redirect detected!')
             continue
         book_page_url = f'https://tululu.org/b{id_}/'
         book_page_response = requests.get(book_page_url)
         try:
-            check_for_redirect(book_page_response)
+            book_page_response.raise_for_status()
         except requests.HTTPError:
+            print('Errors on the client or server side')
+            continue
+        try:
+            check_for_redirect(book_page_response)
+        except requests.TooManyRedirects:
             print(f'There isn`t page for book with ID {id_}. Redirect '
                   f'detected!')
             continue
-        book_page_response.raise_for_status()
         book_properties = parse_book_page(book_page_response)
         book_title = book_properties['title']
         book_author = book_properties['author']
