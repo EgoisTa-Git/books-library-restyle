@@ -36,6 +36,21 @@ def check_for_redirect(response):
         raise requests.HTTPError
 
 
+def download_book(response, directory, title, book_id):
+    with open(
+            os.path.join(
+                directory,
+                f'{title} {book_id}.txt'),
+            'w',
+    ) as file:
+        file.write(response.text)
+
+
+def download_image(response, directory, image_name):
+    with open(os.path.join(directory, f'{image_name}'), 'wb') as file:
+        file.write(response.content)
+
+
 def parse_arguments():
     parser = argparse.ArgumentParser(
         description='Парсер онлайн-библиотеки'
@@ -93,14 +108,7 @@ if __name__ == '__main__':
         book_comments = book_properties['comments']
         book_genres = book_properties['genres']
         book_image_name = os.path.basename(book_image_url)
-        with open(
-                os.path.join(
-                    BOOK_DIR,
-                    f'{book_title} {id_}.txt'),
-                'w',
-        ) as file:
-            file.write(book_response.text)
-        with open(os.path.join(IMAGE_DIR, f'{book_image_name}'), 'wb') as file:
-            book_image_response = requests.get(book_image_url)
-            book_image_response.raise_for_status()
-            file.write(book_image_response.content)
+        download_book(book_response, BOOK_DIR, book_title, id_)
+        book_image_response = requests.get(book_image_url)
+        book_image_response.raise_for_status()
+        download_image(book_image_response, IMAGE_DIR, book_image_name)
