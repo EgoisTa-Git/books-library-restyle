@@ -91,6 +91,9 @@ if __name__ == '__main__':
         except requests.HTTPError:
             print('Errors on the client or server side')
             continue
+        except requests.ConnectionError:
+            print('Connection error occurs! Trying next book...')
+            continue
         try:
             check_for_redirect(book_response)
         except requests.TooManyRedirects:
@@ -102,6 +105,9 @@ if __name__ == '__main__':
             book_page_response.raise_for_status()
         except requests.HTTPError:
             print('Errors on the client or server side')
+            continue
+        except requests.ConnectionError:
+            print('Connection error occurs! Trying next book...')
             continue
         try:
             check_for_redirect(book_page_response)
