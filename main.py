@@ -43,9 +43,13 @@ def download_book(response, directory, title, book_id):
         file.write(response.text)
 
 
-def download_image(response, directory, image_name):
-    with open(os.path.join(directory, f'{image_name}'), 'wb') as file:
-        file.write(response.content)
+def download_image(image_url, directory):
+    image_response = requests.get(image_url)
+    image_response.raise_for_status()
+    image_name = os.path.basename(image_url)
+    image_path = os.path.join(directory, f'{image_name}')
+    with open(image_path, 'wb') as file:
+        file.write(image_response.content)
 
 
 def parse_arguments():
@@ -127,8 +131,5 @@ if __name__ == '__main__':
                   f'detected!')
             continue
         book_properties = parse_book_page(book_page_response)
-        book_image_name = os.path.basename(book_properties['image_url'])
         download_book(book_response, BOOK_DIR, book_properties['title'], id_)
-        book_image_response = requests.get(book_properties['image_url'])
-        book_image_response.raise_for_status()
-        download_image(book_image_response, IMAGE_DIR, book_image_name)
+        download_image(book_properties['image_url'], IMAGE_DIR)
