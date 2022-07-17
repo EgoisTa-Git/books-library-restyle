@@ -131,13 +131,8 @@ if __name__ == '__main__':
                   f'detected!')
             continue
         book_properties = parse_book_page(book_page_response)
-        book_title = book_properties['title']
-        book_author = book_properties['author']
-        book_image_url = book_properties['image_url']
-        book_comments = book_properties['comments']
-        book_genres = book_properties['genres']
-        book_image_name = os.path.basename(book_image_url)
-        download_book(book_response, BOOK_DIR, book_title, id_)
-        book_image_response = requests.get(book_image_url)
+        book_image_name = os.path.basename(book_properties['image_url'])
+        download_book(book_response, BOOK_DIR, book_properties['title'], id_)
+        book_image_response = requests.get(book_properties['image_url'])
         book_image_response.raise_for_status()
         download_image(book_image_response, IMAGE_DIR, book_image_name)
