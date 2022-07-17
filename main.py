@@ -37,7 +37,12 @@ def check_for_redirect(response):
         raise requests.TooManyRedirects
 
 
-def download_book(response, directory, title, book_id):
+def download_book(url, book_id, directory, title):
+    payload = {
+        'id': book_id
+    }
+    response = requests.get(url, params=payload, allow_redirects=False)
+    response.raise_for_status()
     file_path = os.path.join(directory, f'{title} {book_id}.txt')
     with open(file_path, 'w',) as file:
         file.write(response.text)
@@ -131,5 +136,5 @@ if __name__ == '__main__':
                   f'detected!')
             continue
         book_properties = parse_book_page(book_page_response)
-        download_book(book_response, BOOK_DIR, book_properties['title'], id_)
+        download_book(book_url, id_, BOOK_DIR, book_properties['title'])
         download_image(book_properties['image_url'], IMAGE_DIR)
