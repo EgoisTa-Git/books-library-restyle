@@ -38,12 +38,8 @@ def check_for_redirect(response):
 
 
 def download_book(response, directory, title, book_id):
-    with open(
-            os.path.join(
-                directory,
-                f'{title} {book_id}.txt'),
-            'w',
-    ) as file:
+    file_path = os.path.join(directory, f'{title} {book_id}.txt')
+    with open(file_path, 'w',) as file:
         file.write(response.text)
 
 
