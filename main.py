@@ -104,7 +104,7 @@ if __name__ == '__main__':
                 connection = True
             except requests.HTTPError:
                 print('Errors on the client or server side')
-                continue
+                break
             except requests.ConnectionError:
                 print('Connection error occurs! Trying to get book...')
                 sleep(5)
