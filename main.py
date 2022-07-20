@@ -95,7 +95,7 @@ if __name__ == '__main__':
         connection = False
         while not connection:
             try:
-                print(f'Trying to get book #{id_}')
+                print(f'Downloading book # {id_}...')
                 book_page_response = get_book_page_response(book_page_url)
                 check_for_redirect(book_page_response)
                 book_properties = parse_book_page(book_page_response)
@@ -110,4 +110,4 @@ if __name__ == '__main__':
                 sleep(5)
             except requests.TooManyRedirects:
                 print(f'There isn`t book with ID {id_}. Redirect detected!')
-                continue
+                break
