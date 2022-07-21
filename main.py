@@ -32,12 +32,6 @@ def parse_book_page(response):
     return properties
 
 
-def get_book_page_response(page_url):
-    page_response = requests.get(page_url, allow_redirects=False)
-    page_response.raise_for_status()
-    return page_response
-
-
 def check_for_redirect(response):
     if 300 <= response.status_code < 400:
         raise requests.TooManyRedirects
@@ -96,7 +90,11 @@ if __name__ == '__main__':
         while not connection:
             try:
                 print(f'Downloading book # {id_}...')
-                book_page_response = get_book_page_response(book_page_url)
+                book_page_response = requests.get(
+                    book_page_url,
+                    allow_redirects=False,
+                )
+                book_page_response.raise_for_status()
                 check_for_redirect(book_page_response)
                 book_properties = parse_book_page(book_page_response)
                 download_book(book_url, id_, BOOK_DIR, book_properties['title'])
