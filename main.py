@@ -96,6 +96,7 @@ if __name__ == '__main__':
     os.makedirs(IMAGE_DIR, exist_ok=True)
     category_url = 'https://tululu.org/l55/'
     book_url = 'https://tululu.org/txt.php'
+    books_properties = {}
     start_page, end_page = parse_arguments()
     for page in range(start_page, end_page):
         page_url = urljoin(category_url, str(page))
@@ -129,12 +130,7 @@ if __name__ == '__main__':
                     download_image(image_url, IMAGE_DIR)
                     book_properties['image_url'] = book_properties[
                         'image_url'].replace('shots', IMAGE_DIR)
-                    with open('books.json', 'a', encoding='utf8') as json_file:
-                        json.dump(
-                            {f'{id_}': book_properties},
-                            json_file,
-                            ensure_ascii=False,
-                        )
+                    books_properties[id_] = book_properties
                     connection = True
                 except requests.HTTPError:
                     print('Errors on the client or server side')
@@ -145,3 +141,9 @@ if __name__ == '__main__':
                 except requests.TooManyRedirects:
                     print(f'There isn`t book with ID {id_}. Redirect detected')
                     break
+    with open('books.json', 'w', encoding='utf8') as json_file:
+        json.dump(
+            books_properties,
+            json_file,
+            ensure_ascii=False,
+        )
