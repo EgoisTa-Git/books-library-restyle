@@ -1,4 +1,5 @@
 import argparse
+import json
 import os
 from time import sleep
 
@@ -25,7 +26,7 @@ def parse_book_page(response):
     properties = {
         'title': sanitize_filename(title.strip()),
         'author': author.strip(),
-        'image_url': urljoin(response.url, image['src']),
+        'image_url': image['src'],
         'comments': comments,
         'genres': genres,
     }
@@ -49,10 +50,10 @@ def download_book(url, book_id, directory, title):
         file.write(response.text)
 
 
-def download_image(image_url, directory):
-    image_response = requests.get(image_url)
+def download_image(url, directory):
+    image_response = requests.get(url)
     image_response.raise_for_status()
-    image_name = os.path.basename(image_url)
+    image_name = os.path.basename(url)
     image_path = os.path.join(directory, f'{image_name}')
     with open(image_path, 'wb') as file:
         file.write(image_response.content)
@@ -121,7 +122,19 @@ if __name__ == '__main__':
                         BOOK_DIR,
                         book_properties['title'],
                     )
-                    download_image(book_properties['image_url'], IMAGE_DIR)
+                    image_url = urljoin(
+                        book_page_response.url,
+                        book_properties['image_url'],
+                    )
+                    download_image(image_url, IMAGE_DIR)
+                    book_properties['image_url'] = book_properties[
+                        'image_url'].replace('shots', IMAGE_DIR)
+                    with open('books.json', 'a', encoding='utf8') as json_file:
+                        json.dump(
+                            {f'{id_}': book_properties},
+                            json_file,
+                            ensure_ascii=False,
+                        )
                     connection = True
                 except requests.HTTPError:
                     print('Errors on the client or server side')
