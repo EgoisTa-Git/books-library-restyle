@@ -5,7 +5,7 @@ from time import sleep
 import requests
 from bs4 import BeautifulSoup
 from pathvalidate import sanitize_filename
-from urllib.parse import urljoin
+from urllib.parse import urljoin, urlparse
 
 BOOK_DIR = 'books'
 IMAGE_DIR = 'images'
@@ -58,54 +58,77 @@ def download_image(image_url, directory):
         file.write(image_response.content)
 
 
+def get_urls_from_page(response):
+    urls = []
+    soup = BeautifulSoup(response.text, 'lxml')
+    book_tags = soup.find_all('table', class_='d_book')
+    for tag in book_tags:
+        short_url = tag.find('div', class_='bookimage').find('a')['href']
+        url = urljoin(response.url, short_url)
+        urls.append(url)
+    return urls
+
+
 def parse_arguments():
     parser = argparse.ArgumentParser(
         description='Парсер онлайн-библиотеки'
     )
     parser.add_argument(
-        '--start_id',
+        '--start',
         default=1,
         type=int,
-        help='Начать скачивать с №...',
+        help='Начать скачивать со страницы №...',
     )
     parser.add_argument(
-        '--end_id',
+        '--end',
         type=int,
-        help='Остановить скачивание на №...',
+        help='Остановить скачивание на странице №...',
     )
     args = parser.parse_args()
-    start = args.start_id
-    end = args.end_id if args.end_id else args.start_id + 1
+    start = args.start
+    end = args.end if args.end else args.start + 1
     return start, end
 
 
 if __name__ == '__main__':
     os.makedirs(BOOK_DIR, exist_ok=True)
     os.makedirs(IMAGE_DIR, exist_ok=True)
-    start_id, end_id = parse_arguments()
-    for id_ in range(start_id, end_id):
-        book_url = f'https://tululu.org/txt.php'
-        book_page_url = f'https://tululu.org/b{id_}/'
-        connection = False
-        while not connection:
-            try:
-                print(f'Downloading book # {id_}...')
-                book_page_response = requests.get(
-                    book_page_url,
-                    allow_redirects=False,
-                )
-                book_page_response.raise_for_status()
-                check_for_redirect(book_page_response)
-                book_properties = parse_book_page(book_page_response)
-                download_book(book_url, id_, BOOK_DIR, book_properties['title'])
-                download_image(book_properties['image_url'], IMAGE_DIR)
-                connection = True
-            except requests.HTTPError:
-                print('Errors on the client or server side')
-                break
-            except requests.ConnectionError:
-                print('Connection error occurs! Trying to get book...')
-                sleep(5)
-            except requests.TooManyRedirects:
-                print(f'There isn`t book with ID {id_}. Redirect detected!')
-                break
+    category_url = 'https://tululu.org/l55/'
+    book_url = 'https://tululu.org/txt.php'
+    start_page, end_page = parse_arguments()
+    for page in range(start_page, end_page):
+        page_url = urljoin(category_url, str(page))
+        print(f'Parsing {page_url}')
+        book_response = requests.get(page_url)
+        book_response.raise_for_status()
+        book_page_urls = get_urls_from_page(book_response)
+        for book_page_url in book_page_urls:
+            id_ = urlparse(book_page_url).path.strip('/')[1:]
+            connection = False
+            while not connection:
+                try:
+                    print(f'Downloading book # {id_}...')
+                    book_page_response = requests.get(
+                        book_page_url,
+                        allow_redirects=False,
+                    )
+                    book_page_response.raise_for_status()
+                    check_for_redirect(book_page_response)
+                    book_properties = parse_book_page(book_page_response)
+                    download_book(
+                        book_url,
+                        id_,
+                        BOOK_DIR,
+                        book_properties['title'],
+                    )
+                    download_image(book_properties['image_url'], IMAGE_DIR)
+                    connection = True
+                except requests.HTTPError:
+                    print('Errors on the client or server side')
+                    break
+                except requests.ConnectionError:
+                    print('Connection error occurs! Trying to get book...')
+                    sleep(5)
+                except requests.TooManyRedirects:
+                    print(f'There isn`t book with ID {id_}. Redirect detected')
+                    break
