@@ -73,6 +73,15 @@ def get_urls_from_page(response):
     return urls
 
 
+def get_last_page(url):
+    response = requests.get(url)
+    response.raise_for_status()
+    soup = BeautifulSoup(response.text, 'lxml')
+    selector = '.tabs .ow_px_td .center .npage'
+    page_number = soup.select(selector)[-1].text
+    return int(page_number)
+
+
 def parse_arguments():
     parser = argparse.ArgumentParser(
         description='Парсер онлайн-библиотеки'
@@ -89,9 +98,7 @@ def parse_arguments():
         help='Остановить скачивание на странице №...',
     )
     args = parser.parse_args()
-    start = args.start
-    end = args.end if args.end else args.start + 1
-    return start, end
+    return args.start, args.end
 
 
 if __name__ == '__main__':
@@ -101,6 +108,8 @@ if __name__ == '__main__':
     book_url = 'https://tululu.org/txt.php'
     books_properties = {}
     start_page, end_page = parse_arguments()
+    if not end_page:
+        end_page = get_last_page(category_url)
     for page in range(start_page, end_page):
         page_url = urljoin(category_url, str(page))
         print(f'Parsing {page_url}')
