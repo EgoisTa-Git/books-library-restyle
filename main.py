@@ -14,14 +14,16 @@ IMAGE_DIR = 'images'
 
 def parse_book_page(response):
     soup = BeautifulSoup(response.text, 'lxml')
-    attributes = soup.find('div', id="content").find('h1').text
+    attributes_selector = '.tabs .ow_px_td h1'
+    attributes = soup.select_one(attributes_selector).text
     title, author = attributes.split('::')
-    image = soup.find('div', class_="bookimage").find('img')
-    comments_block = soup.find_all('div', class_='texts')
-    comments = [
-        comment.find('span', class_='black').text for comment in comments_block
-    ]
-    genres_block = soup.find('span', class_="d_book").find_all('a')
+    image_selector = '.tabs .ow_px_td .d_book .bookimage img'
+    image = soup.select_one(image_selector)
+    comment_selector = '.tabs .ow_px_td .texts .black'
+    comments_block = soup.select(comment_selector)
+    comments = [comment.text for comment in comments_block]
+    genres_selector = '.tabs .ow_px_td span.d_book a'
+    genres_block = soup.select(genres_selector)
     genres = [genre.text for genre in genres_block]
     properties = {
         'title': sanitize_filename(title.strip()),
@@ -62,9 +64,10 @@ def download_image(url, directory):
 def get_urls_from_page(response):
     urls = []
     soup = BeautifulSoup(response.text, 'lxml')
-    book_tags = soup.find_all('table', class_='d_book')
-    for tag in book_tags:
-        short_url = tag.find('div', class_='bookimage').find('a')['href']
+    url_selector = '.tabs .ow_px_td .d_book .bookimage a'
+    urls_tags = soup.select(url_selector)
+    for tag in urls_tags:
+        short_url = tag['href']
         url = urljoin(response.url, short_url)
         urls.append(url)
     return urls
