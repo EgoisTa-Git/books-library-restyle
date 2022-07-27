@@ -96,7 +96,7 @@ def parse_arguments():
     parser.add_argument(
         '--end',
         type=int,
-        help='Остановить скачивание на странице №... (включительно)',
+        help='Остановить скачивание на странице №...',
     )
     parser.add_argument(
         '--dest_folder',
@@ -146,8 +146,8 @@ if __name__ == '__main__':
     books_properties = {}
     end_page = parsed_arguments['end']
     if not end_page:
-        end_page = get_last_page(category_url)
-    for page in range(parsed_arguments['start'], end_page+1):
+        end_page = get_last_page(category_url) + 1
+    for page in range(parsed_arguments['start'], end_page):
         page_url = urljoin(category_url, str(page))
         print(f'Parsing {page_url}')
         book_response = requests.get(page_url)
