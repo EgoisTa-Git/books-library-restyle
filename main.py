@@ -1,6 +1,7 @@
 import argparse
 import json
 import os
+import pathlib
 from time import sleep
 
 import requests
@@ -97,20 +98,56 @@ def parse_arguments():
         type=int,
         help='Остановить скачивание на странице №... (включительно)',
     )
+    parser.add_argument(
+        '--dest_folder',
+        type=pathlib.Path,
+        default='.',
+        help='путь к каталогу с результатами парсинга: картинкам, книгам, JSON',
+    )
+    parser.add_argument(
+        '--skip_imgs',
+        action='store_true',
+        help='Пропустить скачивание изображений',
+    )
+    parser.add_argument(
+        '--skip_txt',
+        action='store_true',
+        help='Пропустить скачивание книг',
+    )
+    parser.add_argument(
+        '--json_path',
+        type=pathlib.Path,
+        default='.',
+        help='путь к каталогу с результатами в JSON',
+    )
     args = parser.parse_args()
-    return args.start, args.end
+    arguments = {
+        'start': args.start,
+        'end': args.end,
+        'dest_folder': args.dest_folder,
+        'skip_imgs': args.skip_imgs,
+        'skip_txt': args.skip_txt,
+        'json_path': args.json_path,
+    }
+    return arguments
 
 
 if __name__ == '__main__':
-    os.makedirs(BOOK_DIR, exist_ok=True)
-    os.makedirs(IMAGE_DIR, exist_ok=True)
+    parsed_arguments = parse_arguments()
+    BASE_DIR = parsed_arguments['dest_folder']
+    books_path = os.path.join(BASE_DIR, BOOK_DIR)
+    images_path = os.path.join(BASE_DIR, IMAGE_DIR)
+    if parsed_arguments['json_path'] != '.':
+        os.makedirs(parsed_arguments['json_path'], exist_ok=True)
+    os.makedirs(books_path, exist_ok=True)
+    os.makedirs(images_path, exist_ok=True)
     category_url = 'https://tululu.org/l55/'
     book_url = 'https://tululu.org/txt.php'
     books_properties = {}
-    start_page, end_page = parse_arguments()
+    end_page = parsed_arguments['end']
     if not end_page:
         end_page = get_last_page(category_url)
-    for page in range(start_page, end_page+1):
+    for page in range(parsed_arguments['start'], end_page+1):
         page_url = urljoin(category_url, str(page))
         print(f'Parsing {page_url}')
         book_response = requests.get(page_url)
@@ -129,19 +166,21 @@ if __name__ == '__main__':
                     book_page_response.raise_for_status()
                     check_for_redirect(book_page_response)
                     book_properties = parse_book_page(book_page_response)
-                    download_book(
-                        book_url,
-                        id_,
-                        BOOK_DIR,
-                        book_properties['title'],
-                    )
+                    if not parsed_arguments['skip_txt']:
+                        download_book(
+                            book_url,
+                            id_,
+                            books_path,
+                            book_properties['title'],
+                        )
                     image_url = urljoin(
                         book_page_response.url,
                         book_properties['image_url'],
                     )
-                    download_image(image_url, IMAGE_DIR)
+                    if not parsed_arguments['skip_imgs']:
+                        download_image(image_url, images_path)
                     book_properties['image_url'] = book_properties[
-                        'image_url'].replace('shots', IMAGE_DIR)
+                        'image_url'].replace('shots', images_path)
                     books_properties[id_] = book_properties
                     connection = True
                 except requests.HTTPError:
@@ -153,7 +192,8 @@ if __name__ == '__main__':
                 except requests.TooManyRedirects:
                     print(f'There isn`t book with ID {id_}. Redirect detected')
                     break
-    with open('books.json', 'w', encoding='utf8') as json_file:
+    json_file_path = os.path.join(parsed_arguments['json_path'], 'books.json')
+    with open(json_file_path, 'w', encoding='utf8') as json_file:
         json.dump(
             books_properties,
             json_file,
