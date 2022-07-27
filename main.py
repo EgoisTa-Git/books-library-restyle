@@ -95,7 +95,7 @@ def parse_arguments():
     parser.add_argument(
         '--end',
         type=int,
-        help='Остановить скачивание на странице №...',
+        help='Остановить скачивание на странице №... (включительно)',
     )
     args = parser.parse_args()
     return args.start, args.end
@@ -110,7 +110,7 @@ if __name__ == '__main__':
     start_page, end_page = parse_arguments()
     if not end_page:
         end_page = get_last_page(category_url)
-    for page in range(start_page, end_page):
+    for page in range(start_page, end_page+1):
         page_url = urljoin(category_url, str(page))
         print(f'Parsing {page_url}')
         book_response = requests.get(page_url)
@@ -149,7 +149,7 @@ if __name__ == '__main__':
                     break
                 except requests.ConnectionError:
                     print('Connection error occurs! Trying to get book...')
-                    sleep(5)
+                    sleep(1)
                 except requests.TooManyRedirects:
                     print(f'There isn`t book with ID {id_}. Redirect detected')
                     break
