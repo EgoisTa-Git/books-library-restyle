@@ -121,33 +121,25 @@ def parse_arguments():
         help='путь к каталогу с результатами в JSON',
     )
     args = parser.parse_args()
-    arguments = {
-        'start': args.start,
-        'end': args.end,
-        'dest_folder': args.dest_folder,
-        'skip_imgs': args.skip_imgs,
-        'skip_txt': args.skip_txt,
-        'json_path': args.json_path,
-    }
-    return arguments
+    return args
 
 
 if __name__ == '__main__':
     parsed_arguments = parse_arguments()
-    BASE_DIR = parsed_arguments['dest_folder']
+    BASE_DIR = parsed_arguments.dest_folder
     books_path = os.path.join(BASE_DIR, BOOK_DIR)
     images_path = os.path.join(BASE_DIR, IMAGE_DIR)
-    if parsed_arguments['json_path'] != '.':
-        os.makedirs(parsed_arguments['json_path'], exist_ok=True)
+    if parsed_arguments.json_path != '.':
+        os.makedirs(parsed_arguments.json_path, exist_ok=True)
     os.makedirs(books_path, exist_ok=True)
     os.makedirs(images_path, exist_ok=True)
     category_url = 'https://tululu.org/l55/'
     book_url = 'https://tululu.org/txt.php'
     books_properties = {}
-    end_page = parsed_arguments['end']
+    end_page = parsed_arguments.end
     if not end_page:
         end_page = get_last_page(category_url) + 1
-    for page in range(parsed_arguments['start'], end_page):
+    for page in range(parsed_arguments.start, end_page):
         page_url = urljoin(category_url, str(page))
         print(f'Parsing {page_url}')
         book_response = requests.get(page_url)
@@ -166,7 +158,7 @@ if __name__ == '__main__':
                     book_page_response.raise_for_status()
                     check_for_redirect(book_page_response)
                     book_properties = parse_book_page(book_page_response)
-                    if not parsed_arguments['skip_txt']:
+                    if not parsed_arguments.skip_txt:
                         download_book(
                             book_url,
                             id_,
@@ -177,7 +169,7 @@ if __name__ == '__main__':
                         book_page_response.url,
                         book_properties['image_url'],
                     )
-                    if not parsed_arguments['skip_imgs']:
+                    if not parsed_arguments.skip_imgs:
                         download_image(image_url, images_path)
                     book_properties['image_url'] = book_properties[
                         'image_url'].replace('shots', images_path)
@@ -192,7 +184,7 @@ if __name__ == '__main__':
                 except requests.TooManyRedirects:
                     print(f'There isn`t book with ID {id_}. Redirect detected')
                     break
-    json_file_path = os.path.join(parsed_arguments['json_path'], 'books.json')
+    json_file_path = os.path.join(parsed_arguments.json_path, 'books.json')
     with open(json_file_path, 'w', encoding='utf8') as json_file:
         json.dump(
             books_properties,
