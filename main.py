@@ -142,9 +142,19 @@ if __name__ == '__main__':
     for page in range(parsed_arguments.start, end_page):
         page_url = urljoin(category_url, str(page))
         print(f'Parsing {page_url}')
-        books_page_response = requests.get(page_url)
-        books_page_response.raise_for_status()
-        book_page_urls = get_urls_from_page(books_page_response)
+        connection = False
+        while not connection:
+            try:
+                books_page_response = requests.get(page_url)
+                books_page_response.raise_for_status()
+                book_page_urls = get_urls_from_page(books_page_response)
+                connection = True
+            except requests.HTTPError:
+                print('Errors on the client or server side')
+                break
+            except requests.ConnectionError:
+                print('Connection error occurs! Trying to get book...')
+                sleep(1)
         for book_page_url in book_page_urls:
             id_ = urlparse(book_page_url).path.strip('/')[1:]
             connection = False
