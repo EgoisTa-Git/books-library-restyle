@@ -78,8 +78,8 @@ def get_last_page(url):
     response = requests.get(url)
     response.raise_for_status()
     soup = BeautifulSoup(response.text, 'lxml')
-    selector = '.tabs .ow_px_td .center .npage'
-    page_number = soup.select(selector)[-1].text
+    selector = '.tabs .ow_px_td .center .npage:last-of-type'
+    page_number = soup.select_one(selector).text
     return int(page_number)
 
 
