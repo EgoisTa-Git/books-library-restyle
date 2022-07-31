@@ -129,6 +129,7 @@ if __name__ == '__main__':
     BASE_DIR = parsed_arguments.dest_folder
     books_path = os.path.join(BASE_DIR, BOOK_DIR)
     images_path = os.path.join(BASE_DIR, IMAGE_DIR)
+    default_image = os.path.join(images_path, 'nopic.gif')
     if parsed_arguments.json_path != '.':
         os.makedirs(parsed_arguments.json_path, exist_ok=True)
     os.makedirs(books_path, exist_ok=True)
@@ -181,8 +182,11 @@ if __name__ == '__main__':
                     )
                     if not parsed_arguments.skip_imgs:
                         download_image(image_url, images_path)
-                    book_properties['image_url'] = book_properties[
-                        'image_url'].replace('shots', images_path)
+                    if 'nopic' in book_properties['image_url']:
+                        book_properties['image_url'] = default_image
+                    else:
+                        book_properties['image_url'] = book_properties[
+                            'image_url'].replace('shots', images_path)
                     books_properties[id_] = book_properties
                     connection = True
                 except requests.HTTPError:
