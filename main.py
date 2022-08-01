@@ -48,9 +48,11 @@ def download_book(url, book_id, directory, title):
     response = requests.get(url, params=payload, allow_redirects=False)
     response.raise_for_status()
     check_for_redirect(response)
-    file_path = os.path.join(directory, f'{title} {book_id}.txt')
+    file_name = f'{title} {book_id}.txt'
+    file_path = os.path.join(directory, file_name)
     with open(file_path, 'w',) as file:
         file.write(response.text)
+    return file_path
 
 
 def download_image(url, directory):
@@ -170,7 +172,7 @@ if __name__ == '__main__':
                     check_for_redirect(book_page_response)
                     book_properties = parse_book_page(book_page_response)
                     if not parsed_arguments.skip_txt:
-                        download_book(
+                        book_properties['book_url'] = download_book(
                             book_url,
                             id_,
                             books_path,
