@@ -2,13 +2,15 @@ import json
 
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 from livereload import Server
+from more_itertools import chunked
 
 
 def rebuild():
     template = env.get_template('template.html')
     with open('db/books.json', 'r') as file:
         books = json.load(file)
-    rendered_page = template.render(books=books.values())
+        chunked_books = list(chunked(books.values(), 2))
+    rendered_page = template.render(chunked_books=chunked_books)
     with open('index.html', 'w', encoding="utf8") as file:
         file.write(rendered_page)
 
