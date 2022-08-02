@@ -188,7 +188,7 @@ if __name__ == '__main__':
                         book_properties['image_url'] = default_image
                     else:
                         book_properties['image_url'] = book_properties[
-                            'image_url'].replace('shots', images_path)
+                            'image_url'].replace('/shots', images_path)
                     books_properties[id_] = book_properties
                     connection = True
                 except requests.HTTPError:
