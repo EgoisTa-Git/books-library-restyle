@@ -11,7 +11,7 @@
     <title>E-book library</title>
   </head>
   <body>
-    <div class="container">
+    <div class="container my-3">
       <nav aria-label="Page navigation">
         <ul class="pagination justify-content-center">
           {% if content.pages.current == 1 %}
@@ -70,8 +70,16 @@
                   <div class="card-body">
                     <h5 class="card-title">{{ book.title }}</h5>
                     <p class="card-text">{{ book.author }}</p>
-                    <a href="../{{ book.book_url|urlencode }}" target="_blank"
-                       rel="noopener noreferrer">Читать</a>
+                    {% for genre in book.genres %}
+                      <span class="badge badge-pill badge-info">
+                        {{ genre }}
+                      </span>
+                    {% endfor %}
+                    <p class="card-text">
+                      <br>
+                      <a href="../{{ book.book_url|urlencode }}" target="_blank"
+                         rel="noopener noreferrer">Читать</a>
+                    </p>
                   </div>
                 </div>
               </div>
