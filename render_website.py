@@ -18,8 +18,8 @@ def rebuild(directory=PAGES_DIR):
     page_chunks = list(chunked(chunks, BOOKS_PER_COLUMN))
     for page_number, book_chunk in enumerate(page_chunks, 1):
         pages = {
-            'amount': len(page_chunks),
-            'current': page_number,
+            'number_of_pages': len(page_chunks),
+            'current_page_number': page_number,
         }
         rendered_page = template.render(
             content={'books': book_chunk, 'pages': pages}
