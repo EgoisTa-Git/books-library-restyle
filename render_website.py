@@ -12,7 +12,7 @@ def rebuild(directory=PAGES_DIR):
     template = env.get_template('template.html')
     with open('db/books.json', 'r') as file:
         books = json.load(file)
-        chunks = list(chunked(books.values(), 2))
+    chunks = list(chunked(books.values(), 2))
     page_chunks = list(chunked(chunks, 5))
     for page_number, book_chunk in enumerate(page_chunks, 1):
         pages = {
